@@ -1,0 +1,241 @@
+package com.homin.or.domain.hman.discount;
+
+import io.swagger.models.auth.In;
+import org.junit.Test;
+
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.shouldHaveThrown;
+
+
+public class SoWhat {
+
+    class Adder implements Function<Integer, Integer> {
+        @Override
+        public Integer apply(Integer x) {
+            return x + 10;
+        }
+
+        public int calculate(int x, int y, BiFunction<Integer, Integer, Integer> operator) {
+            return operator.apply(x, y);
+        }
+
+        public int multiply(int x, int y) {
+            return x * y;
+        }
+
+        public int myMultiplyMethod(int x, int y) {
+            return calculate(x, y, this::multiply);
+        }
+
+
+
+    }
+
+    @Test
+//    함수가 1급 시민이 되려면, 함수를 Object 형태로 나타나면 되고, 이를 가능 하게 해주는 것이 자바의 Functional Interface
+//    Function을 데이터 처럼 사용하는 것
+//    함수를 object형태로 구현하고 싶을때마다, 새로운 Object 를 정의 해야 하는 거냐? 그러면 class가 엄청 많아져 거추상 스럽다?
+    public void functionObject() {
+        Integer input = 10;
+        Function<Integer, Integer> adderObject = new Adder();
+        Integer result = adderObject.apply(input);
+        assertThat(result).isEqualByComparingTo(input + 10);
+    }
+
+    @Test
+    public void functionLambda() {
+        Integer input = 10;
+        //Functional Interface 의 인스턴스에 해당하는 Lambda expression로 대체 할 수 있다.-사실은 람다 익스프레션의 타입이 Functional Interface 이다.
+        Function<Integer, Integer> adderObject = (Integer x) -> {
+            return x + 10;
+        };
+        Integer result = adderObject.apply(input);
+        assertThat(result).isEqualByComparingTo(input + 10);
+    }
+
+    @Test
+    //https://www.baeldung.com/java-8-double-colon-operator
+    public void functionShorthandForLambda () {
+        Integer input = 10;
+        Function<Integer, Integer> adderObject = x -> x + 10;
+        Integer result = adderObject.apply(input);
+        assertThat(result).isEqualByComparingTo(input + 10);
+    }
+
+
+    class Price {
+
+        private final String price;
+
+        public Price(String price) {
+            this.price = price;
+        }
+
+        public String getPrice() {
+            return price;
+        }
+
+        public String setProductName(String name) {
+            return price + " " + name;
+        }
+    }
+
+    // 람다 표현식이 단 하나의 메소드만을 호출하는 경우에, 람다 표현식에서 불필요한 매개변수를 제거 하고 사용할 수 있다
+    @Test
+    public void methodReference() {
+//        ClassName::staticMethodName 클래스의 static method(정적 메서드)를 지정할 때
+        Function<String, Integer> stringToInt = Integer::parseInt;
+        Integer five = stringToInt.apply("5");
+
+//        objectName::instanceMethodName 이미 선언되어 있는 객체의 instance method 를 지정할 때
+        String str = "hello";
+        Predicate<String> equalsToHello = str::equals;
+        boolean helloEqualsWorld = equalsToHello.test("world");
+
+//        ClassName::instanceMethodName 해당 클래스의 인스턴스를 매개변수(parameter)로 넘겨 메서드를 실행해주는 함수
+        Function<Price, String> priceToString = price -> price.getPrice();
+        Function<Price, String> priceToString1 = Price::getPrice;
+        String stringPrice = priceToString.apply(new Price("100"));
+
+        BiFunction<Price, String, String> priceDesc = Price::setProductName;
+        String pricedesc1 = priceDesc.apply(new Price("100"), "상품이름");
+        System.out.println(pricedesc1);
+
+//        ClassName::new 클래스의 constructor 를 지정할 때
+//        Price price1 = new Price("100");
+        Function<String, Price> priceCreator = (String value) -> new Price(value);
+        Price price = priceCreator.apply("100");
+
+        Function<String, Price> priceCreator1 = Price::new;
+        price = priceCreator1.apply("100");
+
+    }
+
+    @Test
+    //1급 시민의 조건
+    //함수/메서드의 매개변수로서 전달할 수 있는가
+    //함수/메서드의 변환값(return)이 될 수 있는가
+    //변수에 담을 수 있는가
+    public void test() {
+        Adder adder = new Adder();
+        assertThat(adder.calculate(2, 3, (x, y) -> x + y)).isEqualByComparingTo(5);
+        assertThat(adder.calculate(2, 3, adder::multiply)).isEqualByComparingTo(6);
+        assertThat(adder.calculate(2, 3, adder::myMultiplyMethod)).isEqualByComparingTo(6);
+    }
+
+    //명령형 언어는 상태로 프로그래밍 모델을 만든다.
+    //매개변수를 주고받는 것, 클로저는 코드와 문맥을 한 구조로 캡슐화해서 행위의 모델을 만들 수 있게 해준다.
+    //이렇게 만들어진 클로저는 마치 전통적인 자료구저처럼 주고 받을 수 있고, 적절한 시간과 상태에서 실행할 수 있다.
+    // 언어로 하여금 상태를 관리하게 한다.
+    @Test
+    public void ReductionMethod() {
+        Stream<Integer> reductionStream = Stream.of(3, -2, 8,-3, 10)
+                .filter(x -> x > 0)
+                .peek(x -> System.out.println("peeking " + x))
+                .filter(x -> x % 2 == 0);
+        System.out.println("Before Reduction method ");
+
+        //리덕션 메소드는 스트림에서 프로그램에서 사용할 수 있는 값으로 리듀스 한다.
+        //Reduction 은 최종 연산(terminal operation)이다.
+        List<Integer> reduceInteger = reductionStream.collect(Collectors.toList());
+        System.out.println("After Reduction method :" + reduceInteger);
+    }
+
+
+    // 개발자가 직접 내부 상태를 관리해야 하는 클래스 보다, 런타임에 내부 상태의 관리를 맡겨버리는 것
+    //직접 필드를 생성하고 그상태를 관리하기보다는, 언어나 프레임워크가 보이지 않게 그 상태를 관리 할 수 있게 놔두는것
+    //클로저의 사용이 함수적 사고를 예시하는지 이해 할 수 있음
+    public static Supplier<String> getStringSupplier() {
+        String hello = "hello";
+        Supplier<String> supplier = () -> {  //함수 안에 함수가 있을 때
+            String world = "world";
+            return hello + world;    //내부 함수에서 외부 함수에 있는 변수에 접근이 가능 (lexical scope) 그 반대는 불가능
+        };
+        return supplier;
+    }
+
+    @Test
+    public void curryTest() {
+        Supplier<String> supplier = getStringSupplier();
+        System.out.println(supplier.get());
+
+        BiFunction<Integer, Integer, Integer> add = (x, y) -> x +y;
+        Function<Integer, Function<Integer, Integer>> curriedAdd = x -> y -> x + y;
+
+        Function<Integer, Integer> addThree = curriedAdd.apply(3);
+
+        System.out.println(addThree.apply(10));
+
+    }
+
+    // Lambda의 계산은 그 결과값이 필요할 때가 되어서야 계산된다.
+    // 이를 이용하여 불필요한 계산을 줄이거나 해당 코드의 실행순서를 의도적으로 미룰 수 있다
+    @Test
+    public void lazyEvaluation() {
+        if (returnTrue() || returnFalse()) {
+            System.out.println("true");
+        }
+
+        if (or(returnTrue(), returnFalse())) {
+            System.out.println("true");
+        }
+
+        if (lazyOr(() -> returnTrue(), () -> returnFalse())) {
+            System.out.println("true");
+        }
+
+    }
+
+    boolean lazyOr(Supplier<Boolean> x, Supplier<Boolean> y) {
+        return x.get() || y.get();
+    }
+
+    static boolean or(boolean x, boolean y) {
+        return x || y;
+    }
+
+    static boolean returnTrue() {
+        System.out.println("returning true");
+        return true;
+    }
+
+    static boolean returnFalse() {
+        System.out.println("returning false");
+        return false;
+    }
+
+    private static <T, R> Supplier<String> failedMessageSupplier(Function<String,String> fn,
+                                                                 String msgPrefix,
+                                                                 String ... customMessages) {
+        final String msgString = new StringBuilder(msgPrefix)
+                                        .append(" - ")
+                                        .append(String.join("\n", customMessages))
+                                        .toString();
+        return () -> fn.apply(msgString);
+    }
+
+    private final static Supplier<String> failedMessageSupplier(final String msgPrefix,
+                                                                final String ... customMessages) {
+        final String msgString = new StringBuilder(msgPrefix)
+                                        .append(" - ")
+                                        .append(String.join("\n", customMessages)).toString();
+        return () -> (String)Function.identity().apply(msgString);
+    };
+
+    //    create(bind(Foo::new, "hello"));
+    public static <T, R> Supplier<R> bind(Function<T,R> fn, T val) {
+        return () -> fn.apply(val);
+    }
+
+
+
+
+}
