@@ -1,0 +1,113 @@
+public class CouponTest {
+
+    //주문내역
+    class PurchaseOrder {
+        BigDecimal orderQuantity;
+        BigDecimal price;
+
+        public PurchaseOrder(BigDecimal orderQuantity, BigDecimal price) {
+            this.orderQuantity = orderQuantity;
+            this.price = price;
+        }
+
+        public BigDecimal getOrderQuantity() {
+            return orderQuantity;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+    }
+
+    //쿠폰정보
+    class Coupon {
+        BigDecimal maxDiscountAmount;           //최대할인 금액
+        BigDecimal minimumBuyAmount;            //최소구매 금액
+        String couponDiscountMethodCode;       // 01: 정액, 02 : 정률
+        BigDecimal discountValue;              // 할인가 or 할인율
+
+        public Coupon(BigDecimal maxDiscountAmount, BigDecimal minimumBuyAmount, String couponDiscountMethodCode, BigDecimal discountValue) {
+            this.maxDiscountAmount = maxDiscountAmount;
+            this.minimumBuyAmount = minimumBuyAmount;
+            this.couponDiscountMethodCode = couponDiscountMethodCode;
+            this.discountValue = discountValue;
+        }
+
+        public BigDecimal percentDiscountedFare(final PurchaseOrder purchaseOrder) {
+            return purchaseOrder.getPrice().multiply(purchaseOrder.orderQuantity).multiply(BigDecimal.ONE.subtract(this.discountValue.scaleByPowerOfTen(-2)));
+        }
+
+        public BigDecimal priceDiscountedFare(final PurchaseOrder purchaseOrder) {
+            return purchaseOrder.getPrice().multiply(purchaseOrder.orderQuantity).subtract(this.discountValue);
+        }
+
+        public BigDecimal getMaxDiscountAmount() {
+            return maxDiscountAmount;
+        }
+
+        public BigDecimal getMinimumBuyAmount() {
+            return minimumBuyAmount;
+        }
+
+        public String getCouponDiscountMethodCode() {
+            return couponDiscountMethodCode;
+        }
+
+        public BigDecimal getDiscountValue() {
+            return discountValue;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Coupon.class.getSimpleName() + "[", "]")
+                    .add("maxDiscountAmount=" + maxDiscountAmount)
+                    .add("minimumBuyAmount=" + minimumBuyAmount)
+                    .add("couponDiscountMethodCode='" + couponDiscountMethodCode + "'")
+                    .add("discountValue=" + discountValue)
+                    .toString();
+        }
+    }
+
+
+
+    enum DiscountFare {
+
+        PERCENT_DISCOUNT(Coupon::percentDiscountedFare, discountMethodCode -> "01".equals(discountMethodCode)),
+        PRICE_DISCOUNT(Coupon::priceDiscountedFare, discountMethodCode -> "02".equals(discountMethodCode));
+
+        private BiFunction<Coupon, PurchaseOrder, BigDecimal> calculateDiscountFare;
+        private Predicate isDiscountMethod;
+
+        DiscountFare(BiFunction<Coupon, PurchaseOrder, BigDecimal> calculateDiscountFare, Predicate isDiscountMethod) {
+            this.calculateDiscountFare = calculateDiscountFare;
+            this.isDiscountMethod = isDiscountMethod;
+        }
+
+        public static DiscountFare findDiscountFarePolicy(final Coupon coupon) {
+            return Arrays.stream(DiscountFare.values())
+                    .filter(discountRate -> discountRate.isDiscountMethod.test(coupon.getCouponDiscountMethodCode()))
+                    .findFirst()
+                    .orElseThrow(() -> new NoSuchElementException("해당하는 DiscountRate 없습니다"));
+        }
+
+        public BigDecimal calculateFare(final Coupon coupon, final PurchaseOrder purchaseOrder) {
+            return this.calculateDiscountFare.apply(coupon, purchaseOrder);
+        }
+    }
+
+    @FunctionalInterface
+    interface CouponCreator {
+        Coupon create(BigDecimal maxDiscountAmount, BigDecimal minimumBuyAmount, String couponDiscountMethodCode, BigDecimal discountValue);
+    }
+
+    @Test
+    public void CouponTest() {
+
+        final CouponCreator couponCreator = Coupon::new;
+        Coupon coupon = couponCreator.create(BigDecimal.valueOf(100), BigDecimal.valueOf(10), "01", BigDecimal.valueOf(10));
+//        Function<Coupon, DiscountFare> discountFarePolicy = DiscountFare::findDiscountFarePolicy;
+//        DiscountFare discountFare = discountFarePolicy.apply(coupon);
+        DiscountFare discountFare = DiscountFare.findDiscountFarePolicy(coupon);
+        System.out.println(discountFare.calculateFare(coupon, new PurchaseOrder(BigDecimal.valueOf(1), BigDecimal.valueOf(1000))));
+    }
+}
