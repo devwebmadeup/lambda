@@ -1,0 +1,85 @@
+package com.homin.or.kakao;
+
+import java.util.List;
+import java.util.StringJoiner;
+
+class Data {
+
+    boolean first;
+    boolean last;
+    boolean empty;
+    int numberOfElements;
+    int totalElements;
+    int number;
+    int totalPages;
+    List<Content> content;
+
+    public int currentOffset() {
+        return number;
+    }
+
+    public int nextOffset() {
+        return number + 1;
+    }
+
+    boolean isDelay() {
+        return false;
+    }
+
+    int nextPage() {
+        return 3;
+    }
+
+    int readSeqDataOffset() {
+        int 3
+    }
+
+    public Data() {
+    }
+
+    public void setFirst(boolean first) {
+        this.first = first;
+    }
+
+    public void setLast(boolean last) {
+        this.last = last;
+    }
+
+    public void setEmpty(boolean empty) {
+        this.empty = empty;
+    }
+
+    public void setNumberOfElements(int numberOfElements) {
+        this.numberOfElements = numberOfElements;
+    }
+
+    public void setTotalElements(int totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public void setContent(List<Content> content) {
+        this.content = content;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Data.class.getSimpleName() + "[", "]")
+                .add("\n first=" + first)
+                .add("\n last=" + last)
+                .add("\n empty=" + empty)
+                .add("\n numberOfElements=" + numberOfElements)
+                .add("\n totalElements=" + totalElements)
+                .add("\n number=" + number)
+                .add("\n totalPages=" + totalPages)
+                .add("\n content=" + content)
+                .toString();
+    }
+}
