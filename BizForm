@@ -1,0 +1,26 @@
+package com.homin.or.kakao;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.StringJoiner;
+
+class BizForm {
+
+    @JsonProperty
+    Data data;
+
+    public BizForm() {
+
+    }
+
+    public void setData(Data data) {
+        this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", BizForm.class.getSimpleName() + "[", "]")
+                .add("data=" + data)
+                .toString();
+    }
+}
