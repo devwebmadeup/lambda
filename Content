@@ -1,0 +1,44 @@
+package com.homin.or.kakao;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.StringJoiner;
+
+class Content {
+    int seq;
+    String encUserId;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    LocalDateTime submitAt;
+
+    public Content() {
+    }
+
+    public void setSeq(int seq) {
+        this.seq = seq;
+    }
+
+    public void setEncUserId(String encUserId) {
+        this.encUserId = encUserId;
+    }
+
+    public void setSubmitAt(LocalDateTime submitAt) {
+        this.submitAt = submitAt;
+
+
+
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Content.class.getSimpleName() + "[", "]\n")
+                .add("\nseq=" + seq)
+                .add("\nencUserId='" + encUserId + "'")
+//                .add("\nsubmitAt='" + LocalDateTime.parse(submitAt.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "'") 불가함
+                .add("\nsubmitAt='" + submitAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "'")
+                .toString();
+    }
+}
