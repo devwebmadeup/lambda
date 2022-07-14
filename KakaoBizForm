@@ -1,0 +1,56 @@
+package com.homin.or.kakao;
+
+import org.junit.Test;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+
+public class KakaoBizForm {
+
+    @Test
+    public void findKakaoBiz() {
+
+        String kakaoURL = "https://open-api-talk-biz-form.kakao.com/api/v1/open-api/bizforms/6590/user-responses?page={page}";
+
+        Map<String, String> queryParamMap = new HashMap<>();
+        queryParamMap.put("page", "0");
+
+        UriComponents builder = UriComponentsBuilder.fromHttpUrl(kakaoURL).buildAndExpand(queryParamMap);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("page", 1);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType( MediaType.APPLICATION_JSON );
+        headers.add("X-BIZFORM-API-KEY", "");
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<BizForm> result =
+                restTemplate.exchange(builder.toUriString(),
+                        HttpMethod.GET,
+                        entity,
+                        BizForm.class
+                );
+//        System.out.println(bizForm);
+
+        BizForm bizForm = result.getBody();
+        Data data = bizForm.data;
+        if (data.isDelay()) {
+
+        }
+    }
+
+}
